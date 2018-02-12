@@ -1,6 +1,7 @@
-.PHONY: clean configtest
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-lambda:
+lambda: ## Build lambda package
 	npm install .
 	@echo "Factory package files..."
 	@if [ ! -d build ] ;then mkdir build; fi
@@ -15,14 +16,17 @@ lambda:
 	@cd build && zip -rq aws-lambda-image.zip .
 	@mv build/aws-lambda-image.zip ./
 
-uploadlambda: lambda
+uploadlambda: lambda ## Upload lambda to aws (set LAMBDA_FUNCTION_NAME)
 	@if [ -z "${LAMBDA_FUNCTION_NAME}" ]; then (echo "Please export LAMBDA_FUNCTION_NAME" && exit 1); fi
-	aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --zip-file fileb://aws-lambda-image.zip
+	aws-vault exec shrinkray -- aws lambda update-function-code --function-name ${LAMBDA_FUNCTION_NAME} --zip-file fileb://aws-lambda-image.zip
 
-configtest:
+configtest: ## Run configtest
 	@./bin/configtest
 
-clean:
+clean: ## Clean up lambda package
 	@echo "clean up package files"
 	@if [ -f aws-lambda-image.zip ]; then rm aws-lambda-image.zip; fi
 	@rm -rf build/*
+
+.PHONY: help lambda uploadlambda configtest clean
+.DEFAULT_GOAL := help
