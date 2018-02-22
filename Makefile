@@ -4,6 +4,9 @@ help:
 deploy: ## Deploy lambda
 	aws-vault exec shrinkray -- npm run deploy
 
+update: ## Update lambda
+	aws-vault exec shrinkray -- npm run update
+
 configtest: ## Run configtest
 	@./bin/configtest
 
